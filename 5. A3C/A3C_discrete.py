@@ -2,10 +2,10 @@
 
 import torch
 import torch.nn as nn
-from .utils import v_wrap, set_init, push_and_pull, record
+from utils import v_wrap, set_init, push_and_pull, record
 import torch.nn.functional as F
 import torch.multiprocessing as mp
-from .shared_adam import SharedAdam
+from shared_adam import SharedAdam
 import gym
 import os
 
@@ -49,11 +49,20 @@ class Net(nn.Module):
     def loss_func(self, s, a, v_t):
         self.train()
         logits, values = self.forward(s)
+
+        print('###### v_t ######')
+        print(v_t)
+        print('###### values ######')
+        print(values)
+        print('#################')
         td = v_t - values
         c_loss = td.pow(2)
-
+        print('td : ', td)
         probs = F.softmax(logits, dim=1)
+        print('probs : ', probs)
         m = self.distribution(probs)
+
+        print('logs : ',m.log_prob(a))
         exp_v = m.log_prob(a) * td.detach()
         a_loss = -exp_v
         total_loss = (c_loss + a_loss).mean()
@@ -106,7 +115,7 @@ if __name__ == "__main__":
     global_ep, global_ep_r, res_queue = mp.Value('i', 0), mp.Value('d', 0.), mp.Queue()
 
     # parallel training
-    workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, i) for i in range(mp.cpu_count())]
+    workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, i) for i in range(2)]
     [w.start() for w in workers]
     res = []  # record episode reward to plot
     while True:
