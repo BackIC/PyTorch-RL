@@ -24,13 +24,43 @@ def push_and_pull(opt, lnet, gnet, done, s_, bs, ba, br, gamma):
         v_s_ = 0.               # terminal
     else:
         v_s_ = lnet.forward(v_wrap(s_[None, :]))[-1].data.numpy()[0, 0]
+        # s_					[ 0.06607786  0.74773231 -0.10495857 -1.32181293]
+        # 버퍼 이후의 다음상태
 
+        # [None, :]		        [[ 0.06607786  0.74773231 -0.10495857 -1.32181293]]
+        # tensor에 넣어주기 위해 한번더 둘러쌈
+        # 안할시 IndexError: too many indices for array 발생
+
+        # v_wrap			    tensor([[ 0.0661,  0.7477, -0.1050, -1.3218]])
+        # 상태를 tensor 상태로 변경
+
+        # forward		    	(tensor([[0.0637, 0.0626]], grad_fn=<ThAddmmBackward>), tensor([[0.2033]], grad_fn=<ThAddmmBackward>))
+        # localNet에 forwarding, logits와 value 가져옴
+
+        # -1					tensor([[0.2033]], grad_fn=<ThAddmmBackward>)
+        # value만 추려냄
+
+        # data			    	tensor([[0.2033]])
+        # backpropagation 제거
+
+        # numpy			        [[ 0.20328102]]
+        # torch값을 numpy로 변환
+
+        # [0, 0]				0.203281
+        # 값만 추려옴
+
+
+
+
+    #print('v_s_ :', v_s_)
+    #print('gamma :', gamma)
+    #print('br', br)
     buffer_v_target = []
     for r in br[::-1]:    # reverse buffer r
         v_s_ = r + gamma * v_s_
         buffer_v_target.append(v_s_)
     buffer_v_target.reverse()
-    print('buffer_v_target :', buffer_v_target)
+    #print('buffer_v_target :', buffer_v_target)
 
     loss = lnet.loss_func(
         v_wrap(np.vstack(bs)),

@@ -50,19 +50,21 @@ class Net(nn.Module):
         self.train()
         logits, values = self.forward(s)
 
-        print('###### v_t ######')
-        print(v_t)
-        print('###### values ######')
-        print(values)
-        print('#################')
+        #print('###### v_t ######')
+        #print(v_t)
+        #print('###### values ######')
+        #print(values)
+        #print('#################')
+        #print(v_t)
+        #print(values)
         td = v_t - values
         c_loss = td.pow(2)
-        print('td : ', td)
+        #print('td : ', td)
         probs = F.softmax(logits, dim=1)
-        print('probs : ', probs)
+        #print('probs : ', probs)
         m = self.distribution(probs)
-        print('action : ',a)
-        print('logs : ',m.log_prob(a))
+        #print('action : ',a)
+        #print('logs : ',m.log_prob(a))
         exp_v = m.log_prob(a) * td.detach()
         a_loss = -exp_v
         total_loss = (c_loss + a_loss).mean()
@@ -115,7 +117,7 @@ if __name__ == "__main__":
     global_ep, global_ep_r, res_queue = mp.Value('i', 0), mp.Value('d', 0.), mp.Queue()
 
     # parallel training
-    workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, i) for i in range(2)]
+    workers = [Worker(gnet, opt, global_ep, global_ep_r, res_queue, i) for i in range(mp.cpu_count())]
     [w.start() for w in workers]
     res = []  # record episode reward to plot
     while True:
