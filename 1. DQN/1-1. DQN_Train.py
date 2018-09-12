@@ -67,6 +67,7 @@ class DQN(nn.Module):
         index = self.memory_counter % MEMORY_CAPACITY # 2000step 마다 각각 메모리 갱신
         self.memory[index, :] = transition
         self.memory_counter += 1
+        self.memory_counter += 1
 
     def train(self):
         # target parameter update
